@@ -78,12 +78,14 @@ public class StreamCompressor extends StreamDecompressor {
     private ImageParams imageParams;
     private BufferedImage bi2;
     private int frameIndex;
+    private boolean pixelDataOnly;
 
-    public StreamCompressor(DicomInputStream in, String inTransferSyntaxUID, DicomOutputStream out) {
-        super(in, inTransferSyntaxUID, out);
+    public StreamCompressor(DicomInputStream in, String inTransferSyntaxUID, DicomOutputStream out, String compressTsuid, Property... params) {
+        this(in, inTransferSyntaxUID, out, compressTsuid, false, params);
     }
 
-    public boolean compress(String compressTsuid, Property... params) throws IOException {
+    public StreamCompressor(DicomInputStream in, String inTransferSyntaxUID, DicomOutputStream out, String compressTsuid, boolean pixelDataOnly, Property... params) {
+        super(in, inTransferSyntaxUID, out);
         if (compressTsuid == null)
             throw new NullPointerException("compressTsuid");
 
@@ -96,6 +98,8 @@ public class StreamCompressor extends StreamDecompressor {
         if (param == null)
             throw new UnsupportedOperationException(
                     "Unsupported Transfer Syntax: " + compressTsuid);
+
+        this.pixelDataOnly = pixelDataOnly;
 
         this.compressor = ImageWriterFactory.getImageWriter(param);
         LOG.debug("Compressor: {}", compressor.getClass().getName());
@@ -127,6 +131,9 @@ public class StreamCompressor extends StreamDecompressor {
             this.verifyParam = verifier.getDefaultReadParam();
             LOG.debug("Verifier: {}", verifier.getClass().getName());
         }
+    }
+
+    public boolean compress() throws IOException {
         decompress();
         return pixeldataProcessed;
     }
@@ -152,12 +159,12 @@ public class StreamCompressor extends StreamDecompressor {
     }
 
     @Override
-    protected void onPixelData(DicomInputStream dis, Attributes attrs) throws IOException {
+    public void onPixelData(DicomInputStream dis, Attributes attrs) throws IOException {
         int tag = dis.tag();
         VR vr = dis.vr();
         int len = dis.length();
         BufferedImage bi = null;
-        this.imageParams = new ImageParams(dataset);
+        this.imageParams = new ImageParams(attrs);
         if (decompressor != null)
             imageParams.decompress(attrs, tsType);
 
@@ -165,8 +172,10 @@ public class StreamCompressor extends StreamDecompressor {
             bi = BufferedImageUtils.createBufferedImage(imageParams, compressTsType);
 
         imageParams.compress(attrs, compressTsType);
-        coerceAttributes.coerce(attrs).writeTo(out);
-        attrs.clear();
+        if (!pixelDataOnly) {
+            coerceAttributes.coerce(attrs).writeTo(out);
+            attrs.clear();
+        }
         out.writeHeader(Tag.PixelData, VR.OB, -1);
         out.writeHeader(Tag.Item, null, 0);
 
