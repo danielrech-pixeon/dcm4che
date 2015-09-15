@@ -8,6 +8,7 @@
   <artifactId>dcm4che-imageio</artifactId>
   <packaging>bundle</packaging>
   <name>dcm4che-imageio</name>
+    <version>3.3.8-pixeon-SNAPSHOT</version>
   <build>
     <plugins>
       <plugin>
@@ -29,22 +30,22 @@
     <dependency>
       <groupId>org.dcm4che</groupId>
       <artifactId>dcm4che-core</artifactId>
-      <version>${project.version}</version>
+      <version>${project.parent.version}</version>
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
       <artifactId>dcm4che-conf-core-api</artifactId>
-      <version>${project.version}</version>
+      <version>${project.parent.version}</version>
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
       <artifactId>dcm4che-image</artifactId>
-      <version>${project.version}</version>
+      <version>${project.parent.version}</version>
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
       <artifactId>dcm4che-imageio-rle</artifactId>
-      <version>${project.version}</version>
+      <version>${project.parent.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
